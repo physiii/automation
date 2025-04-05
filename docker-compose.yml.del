@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: homeassistant/home-assistant:stable
+    # Host network is required for local BLE scanning
+    network_mode: host
+
+    # Grant the container privileged access for Bluetooth (simpler approach)
+    privileged: true
+
+    volumes:
+      - ./homeassistant/config:/config
+      # Map the D-Bus socket so Home Assistant can communicate with the host’s Bluetooth service
+      - /run/dbus:/run/dbus:ro
+
+    restart: unless-stopped
+
+  frigate:
+    container_name: frigate
+    image: ghcr.io/blakeblackshear/frigate:stable-tensorrt
+    runtime: nvidia
+    network_mode: host
+    volumes:
+      - ./frigate/config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /dev/shm:/dev/shm
+      - frigate-media:/media/frigate
+      - /media/mass/recording:/media/frigate/recordings
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+      - YOLO_MODELS=yolov7-320
+      - MQTT_ENABLED=true
+      - MQTT_HOST=127.0.0.1
+    restart: unless-stopped
+
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: koenkk/zigbee2mqtt:latest
+    network_mode: host
+    volumes:
+      - ./zigbee2mqtt/data:/app/data
+    restart: unless-stopped
+
+  photoprism:
+    container_name: photoprism
+    image: photoprism/photoprism:latest
+    ports:
+      - "2342:2342"
+    volumes:
+      - ./photoprism/storage:/photoprism/storage
+      - /media/mass/Backup/Phone/Fold6/DCIM/Camera:/photoprism/originals/Camera
+      - /media/mass/Backup/Phone/Fold6/sdcard/DCIM:/photoprism/originals/DCIM
+      - '/media/mass/Backup/Phone/Fold6/Internal storage/Download:/photoprism/originals/Download'
+      - /media/mass/Pictures:/photoprism/originals/Pictures
+    environment:
+      PHOTOPRISM_ADMIN_PASSWORD: "qweasdzxc"
+      PHOTOPRISM_SITE_URL: "http://192.168.1.40:2342/"
+      PHOTOPRISM_DISABLE_CSP: "true"
+      PHOTOPRISM_FOLLOW_SYMLINKS: "true"
+    restart: unless-stopped
+
+volumes:
+  frigate-media:

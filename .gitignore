@@ -1,0 +1,9 @@
+# Ignore directories with permission issues or ephemeral data
+influxdb/data/
+frigate/
+homeassistant/
+photoprism/
+zigbee2mqtt/
+
+# Keep only important configuration files
+!docker-compose.yml 

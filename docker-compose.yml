@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: homeassistant/home-assistant:stable
+    network_mode: host
+    privileged: true
+    volumes:
+      - ./homeassistant/config:/config
+      - /run/dbus:/run/dbus:ro
+    restart: unless-stopped
+
+  frigate:
+    container_name: frigate
+    image: ghcr.io/blakeblackshear/frigate:stable
+    network_mode: host
+    privileged: true
+    shm_size: 8gb
+    volumes:
+      - ./frigate/config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /dev/shm:/dev/shm
+      - frigate-media:/media/frigate
+      - /media/mass/recording:/media/frigate/recordings
+    environment:
+      - YOLO_MODELS=yolov7-320
+      - MQTT_ENABLED=true
+      - MQTT_HOST=127.0.0.1
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+    restart: always
+
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: koenkk/zigbee2mqtt:latest
+    network_mode: host
+    volumes:
+      - ./zigbee2mqtt/data:/app/data
+    restart: unless-stopped
+
+  photoprism:
+    container_name: photoprism
+    image: photoprism/photoprism:latest
+    ports:
+      - "2342:2342"
+    volumes:
+      - ./photoprism/storage:/photoprism/storage
+      - /media/mass/Backup/Phone/Fold6/DCIM/Camera:/photoprism/originals/Camera
+      - /media/mass/Backup/Phone/Fold6/sdcard/DCIM:/photoprism/originals/DCIM
+      - '/media/mass/Backup/Phone/Fold6/Internal storage/Download:/photoprism/originals/Download'
+      - /media/mass/Pictures:/photoprism/originals/Pictures
+    environment:
+      PHOTOPRISM_ADMIN_PASSWORD: "qweasdzxc"
+      PHOTOPRISM_SITE_URL: "http://192.168.1.40:2342/"
+      PHOTOPRISM_DISABLE_CSP: "true"
+      PHOTOPRISM_HTTP_FRAME_OPTIONS: ""
+      PHOTOPRISM_FOLLOW_SYMLINKS: "true"
+    restart: unless-stopped
+
+volumes:
+  frigate-media:
