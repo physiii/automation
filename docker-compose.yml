@@ -43,20 +43,22 @@ services:
 
   photoprism:
     container_name: photoprism
-    image: photoprism/photoprism:latest
+    image: photoprism/photoprism:latest # <<< CHANGED BACK TO :latest
     ports:
       - "2342:2342"
     volumes:
       - ./photoprism/storage:/photoprism/storage
       - /media/mass/Backup/Phone/Fold6/DCIM/Camera:/photoprism/originals/Camera
+      - /media/mass/Backup/Glasses:/photoprism/originals/Glasses
       - /media/mass/Backup/Phone/Fold6/sdcard/DCIM:/photoprism/originals/DCIM
-      - '/media/mass/Backup/Phone/Fold6/Internal storage/Download:/photoprism/originals/Download'
+      - "/media/mass/Backup/Phone/Fold6/Internal storage/Download:/photoprism/originals/Download"
       - /media/mass/Pictures:/photoprism/originals/Pictures
     environment:
       PHOTOPRISM_ADMIN_PASSWORD: "qweasdzxc"
       PHOTOPRISM_SITE_URL: "http://192.168.1.40:2342/"
-      PHOTOPRISM_DISABLE_CSP: "true"
-      PHOTOPRISM_HTTP_FRAME_OPTIONS: ""
+      PHOTOPRISM_DISABLE_CSP: "true"           # <<< Standard setting for embedding attempt
+      PHOTOPRISM_HTTP_FRAME_OPTIONS: ""        # <<< Standard setting for embedding attempt
+      # PHOTOPRISM_HTTP_CSP: "..."             # <<< Ensure explicit CSP is commented out/removed
       PHOTOPRISM_FOLLOW_SYMLINKS: "true"
     restart: unless-stopped
 
